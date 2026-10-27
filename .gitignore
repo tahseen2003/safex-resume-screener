@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+resume/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+*.env
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*.log
+*~
+.DS_Store
+Thumbs.db
+
+# Output artifacts that can be regenerated
+# (Keep sample files if desired, or ignore new test runs)
+# report.txt
+# ranked_candidates.csv

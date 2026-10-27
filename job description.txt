@@ -1,0 +1,15 @@
+Job Title: Python Developer
+
+Required Skills:
+- Python
+- Django
+- Flask
+- REST API
+- SQL
+- Git
+- Pandas
+- OOP
+- Linux
+- Docker
+
+Experience: 0-2 years preferred. Projects with web development and data handling are a plus.

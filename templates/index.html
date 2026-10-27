@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered resume screening tool. Upload PDF or TXT resumes, match against job descriptions, and rank candidates instantly.">
+  <title>AI Resume Screener — Smart Candidate Ranking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg-deep: #0a0a1a;
+  --bg-surface: rgba(255,255,255,0.04);
+  --bg-glass: rgba(255,255,255,0.06);
+  --bg-glass-hover: rgba(255,255,255,0.10);
+  --border-glass: rgba(255,255,255,0.08);
+  --border-glass-hover: rgba(255,255,255,0.16);
+  --text-primary: #f0f0f5;
+  --text-secondary: #9898b0;
+  --text-muted: #5e5e78;
+  --accent-1: #7c3aed;
+  --accent-2: #06b6d4;
+  --accent-3: #3b82f6;
+  --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #06b6d4 50%, #3b82f6 100%);
+  --gradient-btn: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+  --gradient-gold: linear-gradient(135deg, #f59e0b, #fbbf24);
+  --gradient-silver: linear-gradient(135deg, #94a3b8, #cbd5e1);
+  --gradient-bronze: linear-gradient(135deg, #d97706, #f59e0b);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.35);
+  --shadow-glow: 0 0 40px rgba(124,58,237,0.15);
+  --transition: 0.3s cubic-bezier(.4,0,.2,1);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(6,182,212,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
+  animation: bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse { 0% { opacity: 0.7; } 100% { opacity: 1; } }
+.container {
+  position: relative; z-index: 1;
+  max-width: 960px; margin: 0 auto; padding: 40px 24px 80px;
+}
+.hero { text-align: center; margin-bottom: 48px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-glass); border: 1px solid var(--border-glass);
+  border-radius: 100px; padding: 6px 16px;
+  font-size: 12px; font-weight: 600; color: var(--accent-2);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px;
+}
+.hero-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1.15; margin-bottom: 12px;
+}
+.hero p { font-size: 1.05rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto; }
+.glass-card {
+  background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass); border-radius: var(--radius-lg);
+  padding: 32px; box-shadow: var(--shadow-card);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  margin-bottom: 28px;
+}
+.glass-card:hover { border-color: var(--border-glass-hover); }
+.card-title {
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title .icon { font-size: 1rem; }
+.jd-textarea {
+  width: 100%; min-height: 180px; background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-glass); border-radius: var(--radius-md);
+  padding: 16px 20px; color: var(--text-primary); font-family: var(--font);
+  font-size: 0.95rem; line-height: 1.7; resize: vertical;
+  transition: border-color var(--transition), box-shadow var(--transition); outline: none;
+}
+.jd-textarea::placeholder { color: var(--text-muted); }
+.jd-textarea:focus { border-color: var(--accent-1); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+.upload-zone {
+  border: 2px dashed var(--border-glass); border-radius: var(--radius-lg);
+  padding: 48px 24px; text-align: center; cursor: pointer;
+  transition: all var(--transition); position: relative; overflow: hidden;
+}
+.upload-zone::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--gradient-hero); opacity: 0;
+  transition: opacity var(--transition); z-index: 0;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent-1); }
+.upload-zone:hover::before, .upload-zone.dragover::before { opacity: 0.04; }
+.upload-zone > * { position: relative; z-index: 1; }
+.upload-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; }
+.upload-zone h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+.upload-zone p { color: var(--text-muted); font-size: 0.85rem; }
+.upload-zone .browse-link { color: var(--accent-2); text-decoration: underline; cursor: pointer; }
+.file-list { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.file-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.25);
+  color: #c4b5fd; padding: 5px 14px; border-radius: 100px;
+  font-size: 0.78rem; font-weight: 500;
+}
+.file-chip .remove-file { cursor: pointer; opacity: 0.6; transition: opacity var(--transition); }
+.file-chip .remove-file:hover { opacity: 1; }
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 16px 32px; background: var(--gradient-btn);
+  color: #fff; border: none; border-radius: var(--radius-md);
+  font-family: var(--font); font-size: 1rem; font-weight: 700; cursor: pointer;
+  transition: all var(--transition); box-shadow: 0 4px 24px rgba(124,58,237,0.25);
+  position: relative; overflow: hidden; margin-top: 8px;
+}
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.12), transparent);
+  opacity: 0; transition: opacity var(--transition);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.35); }
+.btn-primary:hover::after { opacity: 1; }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-download {
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px;
+  background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3);
+  color: var(--accent-2); border-radius: var(--radius-md);
+  font-family: var(--font); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); text-decoration: none;
+}
+.btn-download:hover { background: rgba(6,182,212,0.2); transform: translateY(-1px); }
+.spinner-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(10,10,26,0.85); backdrop-filter: blur(8px);
+  z-index: 999; justify-content: center; align-items: center;
+  flex-direction: column; gap: 20px;
+}
+.spinner-overlay.active { display: flex; }
+.spinner {
+  width: 48px; height: 48px; border: 3px solid var(--border-glass);
+  border-top-color: var(--accent-1); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-overlay p { color: var(--text-secondary); font-weight: 500; }
+.results-section { display: none; animation: fadeUp 0.5s ease; margin-top: 40px; }
+.results-section.show { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+}
+.results-header h2 { font-size: 1.4rem; font-weight: 800; }
+.results-count { font-size: 0.85rem; color: var(--text-muted); }
+.keywords-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+.kw-chip {
+  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
+  color: #93c5fd; padding: 4px 12px; border-radius: 100px;
+  font-size: 0.75rem; font-weight: 500;
+}
+.candidate-card {
+  background: var(--bg-glass); border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 16px;
+  display: flex; align-items: flex-start; gap: 20px;
+  transition: all var(--transition); animation: cardIn 0.4s ease both;
+}
+.candidate-card:hover {
+  border-color: var(--border-glass-hover); background: var(--bg-glass-hover);
+  box-shadow: var(--shadow-glow);
+}
+.rank-badge {
+  flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.1rem; color: #fff;
+  background: var(--bg-surface); border: 2px solid var(--border-glass);
+}
+.rank-badge.gold { background: var(--gradient-gold); border-color: #f59e0b; box-shadow: 0 0 20px rgba(245,158,11,0.25); }
+.rank-badge.silver { background: var(--gradient-silver); border-color: #94a3b8; color: #1e293b; }
+.rank-badge.bronze { background: var(--gradient-bronze); border-color: #d97706; box-shadow: 0 0 20px rgba(217,119,6,0.15); }
+.candidate-info { flex: 1; min-width: 0; }
+.candidate-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+.candidate-file { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; }
+.score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.score-label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.score-bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+.score-bar-fill {
+  height: 100%; border-radius: 100px; background: var(--gradient-hero);
+  transition: width 0.8s cubic-bezier(.4,0,.2,1); width: 0;
+}
+.skill-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-tag {
+  background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.2);
+  color: #c4b5fd; padding: 3px 10px; border-radius: 100px;
+  font-size: 0.72rem; font-weight: 500;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.candidate-card:nth-child(1) { animation-delay: 0s; }
+.candidate-card:nth-child(2) { animation-delay: 0.06s; }
+.candidate-card:nth-child(3) { animation-delay: 0.12s; }
+.candidate-card:nth-child(4) { animation-delay: 0.18s; }
+.candidate-card:nth-child(5) { animation-delay: 0.24s; }
+.candidate-card:nth-child(6) { animation-delay: 0.30s; }
+.candidate-card:nth-child(7) { animation-delay: 0.36s; }
+.candidate-card:nth-child(8) { animation-delay: 0.42s; }
+.candidate-card:nth-child(9) { animation-delay: 0.48s; }
+.candidate-card:nth-child(10) { animation-delay: 0.54s; }
+.toast {
+  display: none; position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4);
+  color: #fca5a5; padding: 14px 28px; border-radius: var(--radius-md);
+  font-size: 0.9rem; font-weight: 500; z-index: 1000;
+  backdrop-filter: blur(12px); animation: fadeUp 0.3s ease; max-width: 90%; text-align: center;
+}
+.toast.show { display: block; }
+@media (max-width: 640px) {
+  .container { padding: 24px 16px 60px; }
+  .glass-card { padding: 20px; }
+  .candidate-card { flex-direction: column; align-items: stretch; gap: 12px; padding: 20px; }
+  .rank-badge { width: 40px; height: 40px; font-size: 0.95rem; }
+  .results-header { flex-direction: column; align-items: flex-start; }
+}
+  </style>
+</head>
+<body>
+
+<!-- Spinner overlay -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner"></div>
+  <p>Analyzing resumes…</p>
+</div>
+
+<!-- Error toast -->
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-badge"><span class="dot"></span> AI-Powered Screening</div>
+    <h1>Resume Screener</h1>
+    <p>Upload resumes in PDF or TXT format, paste a job description, and let AI rank your candidates instantly.</p>
+  </header>
+
+  <!-- Job Description -->
+  <section class="glass-card" id="jd-section">
+    <div class="card-title"><span class="icon">📋</span> Job Description</div>
+    <textarea class="jd-textarea" id="jdText" placeholder="Paste the full job description here…&#10;&#10;Example:&#10;Job Title: Python Developer&#10;Required Skills:&#10;- Python&#10;- Django&#10;- REST API&#10;- SQL&#10;- Docker"></textarea>
+  </section>
+
+  <!-- Upload -->
+  <section class="glass-card">
+    <div class="card-title"><span class="icon">📄</span> Upload Resumes</div>
+    <div class="upload-zone" id="uploadZone">
+      <span class="upload-icon">☁️</span>
+      <h3>Drag & drop resumes here</h3>
+      <p>or <span class="browse-link" id="browseLink">browse files</span> — accepts <strong>.pdf</strong> and <strong>.txt</strong></p>
+      <input type="file" id="fileInput" multiple accept=".pdf,.txt" hidden>
+      <div class="file-list" id="fileList"></div>
+    </div>
+  </section>
+
+  <!-- Screen Button -->
+  <button class="btn-primary" id="screenBtn" disabled>
+    <span>🔍</span> Screen Candidates
+  </button>
+
+  <!-- Results -->
+  <section class="results-section" id="resultsSection">
+    <div class="results-header">
+      <div>
+        <h2>🏆 Ranked Candidates</h2>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+      <a href="/download-csv" class="btn-download" id="downloadBtn">⬇ Download CSV</a>
+    </div>
+    <div class="keywords-bar" id="keywordsBar"></div>
+    <div id="candidatesList"></div>
+  </section>
+
+</div>
+
+<script>
+(function() {
+  const jdText      = document.getElementById('jdText');
+  const uploadZone  = document.getElementById('uploadZone');
+  const browseLink  = document.getElementById('browseLink');
+  const fileInput   = document.getElementById('fileInput');
+  const fileList    = document.getElementById('fileList');
+  const screenBtn   = document.getElementById('screenBtn');
+  const spinner     = document.getElementById('spinner');
+  const toast       = document.getElementById('toast');
+  const resultsSection = document.getElementById('resultsSection');
+  const resultsCount   = document.getElementById('resultsCount');
+  const keywordsBar    = document.getElementById('keywordsBar');
+  const candidatesList = document.getElementById('candidatesList');
+
+  let uploadedFiles = [];
+
+  // --- Helpers ---
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  function updateBtn() {
+    screenBtn.disabled = !(jdText.value.trim() && uploadedFiles.length);
+  }
+
+  function renderFileChips() {
+    fileList.innerHTML = '';
+    uploadedFiles.forEach((f, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'file-chip';
+      const icon = f.name.toLowerCase().endsWith('.pdf') ? '📕' : '📝';
+      chip.innerHTML = icon + ' ' + f.name + ' <span class="remove-file" data-idx="' + i + '">✕</span>';
+      fileList.appendChild(chip);
+    });
+    // remove handlers
+    fileList.querySelectorAll('.remove-file').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        uploadedFiles.splice(+this.dataset.idx, 1);
+        renderFileChips();
+        updateBtn();
+      });
+    });
+  }
+
+  function addFiles(files) {
+    for (const f of files) {
+      const n = f.name.toLowerCase();
+      if (n.endsWith('.pdf') || n.endsWith('.txt')) {
+        // Avoid duplicates
+        if (!uploadedFiles.some(u => u.name === f.name && u.size === f.size)) {
+          uploadedFiles.push(f);
+        }
+      }
+    }
+    renderFileChips();
+    updateBtn();
+  }
+
+  // --- Events ---
+  jdText.addEventListener('input', updateBtn);
+
+  browseLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+  // Drag & drop
+  ['dragenter','dragover'].forEach(evt =>
+    uploadZone.addEventListener(evt, (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); })
+  );
+  ['dragleave','drop'].forEach(evt =>
+    uploadZone.addEventListener(evt, (e) => { e.preventDefault(); uploadZone.classList.remove('dragover'); })
+  );
+  uploadZone.addEventListener('drop', (e) => { addFiles(e.dataTransfer.files); });
+
+  // --- Screen ---
+  screenBtn.addEventListener('click', async () => {
+    if (screenBtn.disabled) return;
+
+    const formData = new FormData();
+    formData.append('jd_text', jdText.value);
+    uploadedFiles.forEach(f => formData.append('resumes', f));
+
+    spinner.classList.add('active');
+    screenBtn.disabled = true;
+
+    try {
+      const res = await fetch('/screen', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || 'Something went wrong.');
+        return;
+      }
+
+      renderResults(data);
+    } catch (err) {
+      showToast('Network error. Is the server running?');
+    } finally {
+      spinner.classList.remove('active');
+      updateBtn();
+    }
+  });
+
+  // --- Render Results ---
+  function renderResults(data) {
+    resultsSection.classList.add('show');
+    resultsCount.textContent = data.results.length + ' candidate' + (data.results.length !== 1 ? 's' : '') + ' screened';
+
+    // Keywords
+    keywordsBar.innerHTML = '<span style="font-size:0.75rem;color:#5e5e78;font-weight:600;margin-right:4px;">JD KEYWORDS:</span>';
+    data.keywords.forEach(kw => {
+      const chip = document.createElement('span');
+      chip.className = 'kw-chip';
+      chip.textContent = kw;
+      keywordsBar.appendChild(chip);
+    });
+
+    // Cards
+    candidatesList.innerHTML = '';
+    data.results.forEach((r, idx) => {
+      const pct = r.total > 0 ? Math.round((r.score_num / r.total) * 100) : 0;
+      let badgeClass = '';
+      if (idx === 0) badgeClass = 'gold';
+      else if (idx === 1) badgeClass = 'silver';
+      else if (idx === 2) badgeClass = 'bronze';
+
+      const skills = r.Matched_Skills ? r.Matched_Skills.split(', ').filter(Boolean) : [];
+      const skillsHTML = skills.map(s => '<span class="skill-tag">' + s + '</span>').join('');
+
+      const card = document.createElement('div');
+      card.className = 'candidate-card';
+      card.style.animationDelay = (idx * 0.06) + 's';
+      card.innerHTML =
+        '<div class="rank-badge ' + badgeClass + '">' + r.Rank + '</div>' +
+        '<div class="candidate-info">' +
+          '<div class="candidate-name">' + r.Name + '</div>' +
+          '<div class="candidate-file">' + r.File + '</div>' +
+          '<div class="score-row">' +
+            '<span class="score-label">' + r.Score + '</span>' +
+            '<div class="score-bar-track"><div class="score-bar-fill" style="width:0"></div></div>' +
+          '</div>' +
+          '<div class="skill-tags">' + skillsHTML + '</div>' +
+        '</div>';
+
+      candidatesList.appendChild(card);
+
+      // Animate score bar
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          card.querySelector('.score-bar-fill').style.width = pct + '%';
+        });
+      });
+    });
+
+    // Scroll to results
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+})();
+</script>
+
+</body>
+</html>
